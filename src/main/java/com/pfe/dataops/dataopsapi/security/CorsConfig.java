@@ -15,28 +15,27 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cfg = new CorsConfiguration();
 
-        // 🔹 Fronts autorisés
-        cfg.setAllowedOriginPatterns(List.of(
-                "http://localhost:*",                          // dev
-                "https://orange-ground-0b187a01e.3.azurestaticapps.net"  // ⬅️ ton front Azure (à adapter)
+        // 🌍 ORIGINES AUTORISÉES — DOIVENT ÊTRE EXACTES
+        cfg.setAllowedOrigins(List.of(
+                "http://localhost:4200",
+                "https://orange-ground-0b187a01e.3.azurestaticapps.net"
         ));
 
-        // 🔹 Méthodes autorisées
-        cfg.setAllowedMethods(List.of(
-                "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
-        ));
+        // 🔁 Méthodes autorisées
+        cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
 
-        // 🔹 Headers autorisés
-        cfg.setAllowedHeaders(List.of("*"));
+        // 📨 Headers autorisés
+        cfg.setAllowedHeaders(List.of("Authorization", "Content-Type", "Cache-Control"));
 
-        // 🔹 Expose le header Authorization
-        cfg.addExposedHeader("Authorization");
+        // 📤 Headers exposés
+        cfg.setExposedHeaders(List.of("Authorization"));
 
-        // 🔹 Autorise l’envoi de cookies / tokens
+        // 🔐 Important pour Keycloak (cookies/tokens)
         cfg.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", cfg);
+
         return source;
     }
 }
