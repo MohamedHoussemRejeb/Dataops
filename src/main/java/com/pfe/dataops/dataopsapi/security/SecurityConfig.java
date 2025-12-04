@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -25,18 +26,21 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> {})
+                // ✅ use the CorsConfigurationSource bean from CorsConfig
+                .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        // 🔓 endpoints publics existants
-                        .requestMatchers("/actuator/health", "/api/public/**").permitAll()
 
-                        // 🔓 🔥 WebSockets / SockJS ouverts
+                        // ✅ allow CORS preflight requests
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // ✅ make /api/health public as well
+                        .requestMatchers("/actuator/health", "/api/health", "/api/public/**").permitAll()
+
+                        // 🔓 WebSockets / SockJS
                         .requestMatchers("/api/ws-events/**", "/api/ws-notifications/**").permitAll()
-
-                        // 🔓 endpoint de test des notifs (si tu l’utilises)
                         .requestMatchers("/api/notifications/test").permitAll()
 
-                        // 🔓 (optionnel pour dev) : ouvrir settings + catalog + etl
+                        // 🔓 dev endpoints
                         .requestMatchers("/api/settings/**", "/api/catalog/**", "/api/etl/**", "/api/chatbot/**").permitAll()
                         .requestMatchers("/api/lineage/**").permitAll()
                         .requestMatchers("/api/lineage/column-edges/**").permitAll()
@@ -46,7 +50,7 @@ public class SecurityConfig {
                         // le reste des /api/** reste protégé
                         .requestMatchers("/api/**").authenticated()
 
-                        // le reste (assets Angular, etc.) libre
+                        // autres (assets, etc.)
                         .anyRequest().permitAll()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
