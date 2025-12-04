@@ -18,7 +18,7 @@ public class CorsConfig {
         // 🔹 Fronts autorisés
         cfg.setAllowedOriginPatterns(List.of(
                 "http://localhost:*",                          // dev
-                "https://dataops-frontend-1234.azurewebsites.net"  // ⬅️ ton front Azure (à adapter)
+                "https://orange-ground-0b187a01e.3.azurestaticapps.net"  // ⬅️ ton front Azure (à adapter)
         ));
 
         // 🔹 Méthodes autorisées
