@@ -21,6 +21,7 @@ public class LineageNodeEntity {
     private String label;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "layer", nullable = false, length = 50, columnDefinition = "varchar(50)")
     private Layer layer;
 
     private String owner;

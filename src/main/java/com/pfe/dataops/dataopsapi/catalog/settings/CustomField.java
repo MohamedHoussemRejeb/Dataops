@@ -10,7 +10,7 @@ public class CustomField {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "field_key", nullable = false, unique = true)  // ✅ nouveau nom SQL
     private String key;       // "sla"
 
     @Column(nullable = false)

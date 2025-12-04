@@ -14,7 +14,7 @@ public class TemplateField {
     @JoinColumn(name = "template_id")
     private SchemaTemplate template;
 
-    @Column(nullable = false)
+    @Column(name = "field_key", nullable = false)  // ✅ évite KEY réservé
     private String key;
 
     @Column(nullable = false)
