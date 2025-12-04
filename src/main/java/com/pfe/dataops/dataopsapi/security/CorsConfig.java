@@ -15,8 +15,11 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cfg = new CorsConfiguration();
 
-        // 🔹 Autorise ton front Angular (peu importe le port)
-        cfg.setAllowedOriginPatterns(List.of("http://localhost:*"));
+        // 🔹 Fronts autorisés
+        cfg.setAllowedOriginPatterns(List.of(
+                "http://localhost:*",                          // dev
+                "https://dataops-frontend-1234.azurewebsites.net"  // ⬅️ ton front Azure (à adapter)
+        ));
 
         // 🔹 Méthodes autorisées
         cfg.setAllowedMethods(List.of(
@@ -26,10 +29,10 @@ public class CorsConfig {
         // 🔹 Headers autorisés
         cfg.setAllowedHeaders(List.of("*"));
 
-        // 🔹 Expose le header Authorization si Keycloak l'utilise
+        // 🔹 Expose le header Authorization
         cfg.addExposedHeader("Authorization");
 
-        // 🔹 Autorise l’envoi du token à ton API
+        // 🔹 Autorise l’envoi de cookies / tokens
         cfg.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
