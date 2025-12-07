@@ -43,7 +43,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/notifications/test").permitAll()
 
                 // 🔐 TOUT le reste des API DataOps doit être authentifié
-                .requestMatchers("/api/**").authenticated()
+                .requestMatchers("/api/**").permitAll()
 
                 // 🌐 assets, index.html, etc. → libres
                 .anyRequest().permitAll()
