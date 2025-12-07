@@ -7,8 +7,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -25,37 +24,34 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
-                // ✅ use the CorsConfigurationSource bean from CorsConfig
-                .cors(Customizer.withDefaults())
-                .authorizeHttpRequests(auth -> auth
+            .csrf(csrf -> csrf.disable())
+            .cors(Customizer.withDefaults())
+            // 🔒 API 100% stateless
+            .sessionManagement(sm ->
+                sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            .authorizeHttpRequests(auth -> auth
 
-                        // ✅ allow CORS preflight requests
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                // ✅ Préflight CORS
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // ✅ make /api/health public as well
-                        .requestMatchers("/actuator/health", "/api/health", "/api/public/**").permitAll()
+                // ✅ Endpoints publics
+                .requestMatchers("/actuator/health", "/api/health", "/api/public/**").permitAll()
 
-                        // 🔓 WebSockets / SockJS
-                        .requestMatchers("/api/ws-events/**", "/api/ws-notifications/**").permitAll()
-                        .requestMatchers("/api/notifications/test").permitAll()
+                // 🔓 (optionnel) WebSockets et endpoint de test – à toi de décider si tu veux les sécuriser
+                .requestMatchers("/api/ws-events/**", "/api/ws-notifications/**").permitAll()
+                .requestMatchers("/api/notifications/test").permitAll()
 
-                        // 🔓 dev endpoints
-                        .requestMatchers("/api/settings/**", "/api/catalog/**", "/api/etl/**", "/api/chatbot/**").permitAll()
-                        .requestMatchers("/api/lineage/**").permitAll()
-                        .requestMatchers("/api/lineage/column-edges/**").permitAll()
-                        .requestMatchers("/api/lineage/columns/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/governance/access-matrix/rebuild").permitAll()
+                // 🔐 TOUT le reste des API DataOps doit être authentifié
+                .requestMatchers("/api/**").authenticated()
 
-                        // le reste des /api/** reste protégé
-                        .requestMatchers("/api/**").authenticated()
-
-                        // autres (assets, etc.)
-                        .anyRequest().permitAll()
-                )
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
-                );
+                // 🌐 assets, index.html, etc. → libres
+                .anyRequest().permitAll()
+            )
+            // 🔑 Resource server JWT (Keycloak)
+            .oauth2ResourceServer(oauth2 -> oauth2
+                .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
+            );
 
         return http.build();
     }
@@ -67,8 +63,8 @@ public class SecurityConfig {
         return converter;
     }
 
-    private Collection<GrantedAuthority> extractRoles(Jwt jwt) {
-        List<GrantedAuthority> authorities = new ArrayList<>();
+    private Collection<org.springframework.security.core.GrantedAuthority> extractRoles(Jwt jwt) {
+        List<org.springframework.security.core.GrantedAuthority> authorities = new ArrayList<>();
 
         Map<String, Object> realmAccess = jwt.getClaim("realm_access");
         if (realmAccess != null) {
@@ -76,7 +72,11 @@ public class SecurityConfig {
             if (roles instanceof List<?>) {
                 for (Object role : (List<?>) roles) {
                     if (role instanceof String roleName) {
-                        authorities.add(new SimpleGrantedAuthority("ROLE_" + roleName.toUpperCase()));
+                        authorities.add(
+                            new org.springframework.security.core.authority.SimpleGrantedAuthority(
+                                "ROLE_" + roleName.toUpperCase()
+                            )
+                        );
                     }
                 }
             }
